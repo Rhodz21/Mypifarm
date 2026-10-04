@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyPiFarm</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#dff5d8;color:#183b1d}
+.header{background:#2e7d32;color:white;padding:18px;text-align:center}
+.header h1{margin:0;font-size:28px}
+.container{max-width:600px;margin:auto;padding:15px}
+.card{background:white;border-radius:16px;padding:16px;margin-bottom:15px;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.balance{font-size:24px;font-weight:bold;color:#6a1b9a}
+.farm{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.plot{min-height:130px;border:3px solid #8d6e63;border-radius:14px;background:#a66a3f;display:flex;flex-direction:column;justify-content:center;align-items:center;color:white;text-align:center;padding:10px}
+.plant{font-size:45px}
+button{width:100%;border:0;border-radius:12px;padding:13px;margin-top:8px;font-size:16px;font-weight:bold;cursor:pointer;background:#43a047;color:white}
+.pi{background:#7b1fa2}
+.bonus{background:#f9a825;color:#222}
+.small{font-size:13px;color:#666;margin-top:8px}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<h1>🌾 MyPiFarm</h1>
+<div id="player">Farmer</div>
+</div>
+
+<div class="container">
+
+<div class="card">
+<div>💰 Farm Coins</div>
+<div class="balance">🪙 <span id="coins">100</span></div>
+<button class="bonus" onclick="dailyBonus()">🎁 Daily Bonus +50</button>
+</div>
+
+<div class="card">
+<h2>🌱 My Farm</h2>
+
+<div class="farm">
+
+<div class="plot" id="plot0">
+<div class="plant">🟫</div>
+<div>Empty</div>
+<button onclick="plant(0)">🌱 Plant</button>
+</div>
+
+<div class="plot" id="plot1">
+<div class="plant">🟫</div>
+<div>Empty</div>
+<button onclick="plant(1)">🌱 Plant</button>
+</div>
+
+<div class="plot" id="plot2">
+<div class="plant">🟫</div>
+<div>Empty</div>
+<button onclick="plant(2)">🌱 Plant</button>
+</div>
+
+<div class="plot" id="plot3">
+<div class="plant">🟫</div>
+<div>Empty</div>
+<button onclick="plant(3)">🌱 Plant</button>
+</div>
+
+<div class="plot" id="plot4">
+<div class="plant">🟫</div>
+<div>Empty</div>
+<button onclick="plant(4)">🌱 Plant</button>
+</div>
+
+<div class="plot" id="plot5">
+<div class="plant">🟫</div>
+<div>Empty</div>
+<button onclick="plant(5)">🌱 Plant</button>
+</div>
+
+</div>
+</div>
+
+<div class="card">
+<h2>🛒 Seed Shop</h2>
+<p>🌽 Corn Seed — 10 coins</p>
+<button onclick="buySeed()">Buy Seed - 10 🪙</button>
+<p>Seeds: <span id="seeds">5</span></p>
+</div>
+
+<div class="card">
+<h2>💜 Pi Rewards</h2>
+<button class="pi" onclick="piRewards()">💜 Pi Rewards</button>
+<div class="small">
+Pi payment integration will be added after the secure backend and Pi Testnet setup.
+</div>
+</div>
+
+</div>
+
+<script>
+
+let coins=100;
+let seeds=5;
+
+let plots=[
+{planted:false,ready:false},
+{planted:false,ready:false},
+{planted:false,ready:false},
+{planted:false,ready:false},
+{planted:false,ready:false},
+{planted:false,ready:false}
+];
+
+function updateCoins(){
+document.getElementById("coins").innerText=coins;
+document.getElementById("seeds").innerText=seeds;
+}
+
+function buySeed(){
+if(coins<10){
+alert("Kulang ang coins mo.");
+return;
+}
+coins-=10;
+seeds++;
+updateCoins();
+alert("🌱 Nakabili ka ng seed!");
+}
+
+function plant(index){
+
+if(plots[index].planted){
+
+if(plots[index].ready){
+harvest(index);
+}else{
+alert("🌱 Lumalaki pa ang tanim.");
+}
+
+return;
+}
+
+if(seeds<=0){
+alert("Wala ka nang seeds. Bumili muna sa Seed Shop.");
+return;
+}
+
+seeds--;
+
+plots[index].planted=true;
+plots[index].ready=false;
+
+renderPlot(index);
+
+setTimeout(function(){
+
+plots[index].ready=true;
+renderPlot(index);
+
+},5000);
+
+updateCoins();
+}
+
+function harvest(index){
+
+coins+=25;
+
+plots[index].planted=false;
+plots[index].ready=false;
+
+renderPlot(index);
+updateCoins();
+
+alert("🌽 Harvest successful! +25 coins");
+}
+
+function renderPlot(index){
+
+const plot=document.getElementById("plot"+index);
+
+if(!plots[index].planted){
+
+plot.innerHTML=`
+<div class="plant">🟫</div>
+<div>Empty</div>
+<button onclick="plant(${index})">🌱 Plant</button>
+`;
+
+return;
+}
+
+if(!plots[index].ready){
+
+plot.innerHTML=`
+<div class="plant">🌱</div>
+<div>Growing...</div>
+<button onclick="plant(${index})">💧 Check</button>
+`;
+
+return;
+}
+
+plot.innerHTML=`
+<div class="plant">🌽</div>
+<div>Ready!</div>
+<button onclick="plant(${index})">🧺 Harvest +25</button>
+`;
+}
+
+function dailyBonus(){
+
+const today=new Date().toDateString();
+const lastBonus=localStorage.getItem("mypifarm_bonus");
+
+if(lastBonus===today){
+alert("🎁 Nakuha mo na ang Daily Bonus today.");
+return;
+}
+
+coins+=50;
+
+localStorage.setItem("mypifarm_bonus",today);
+
+updateCoins();
+
+alert("🎁 Daily Bonus! +50 coins");
+}
+
+function piRewards(){
+
+alert(
+"💜 Pi Rewards\n\n"+
+"Pi payment integration will be added after the secure backend and Pi Testnet setup."
+);
+}
+
+if(window.Telegram && Telegram.WebApp){
+
+Telegram.WebApp.ready();
+Telegram.WebApp.expand();
+
+const user=Telegram.WebApp.initDataUnsafe &&
+Telegram.WebApp.initDataUnsafe.user;
+
+if(user){
+
+const name=user.first_name || user.username || "Farmer";
+
+document.getElementById("player").innerText="👨‍🌾 "+name;
+}
+}
+
+updateCoins();
+
+</script>
+
+</body>
+</html>
